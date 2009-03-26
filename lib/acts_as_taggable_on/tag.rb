@@ -20,4 +20,18 @@ class Tag < ActiveRecord::Base
   def count
     read_attribute(:count).to_i
   end
+  
+  # Renames to new_name. In the case that the new_name already exists it
+  # re-associates all taggings, and destroys this tag.
+  def rename!(new_name)
+    if new_tag = Tag.find_by_name(new_name)
+      transaction do
+        taggings.update_all ['tag_id = ?', new_tag]
+        destroy
+      end
+    else
+      self.name = new_name
+      self.save!
+    end
+  end
 end
